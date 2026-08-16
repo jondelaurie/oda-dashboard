@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDA Worldwide Soccer — Team Cost Dashboard</title>
+  <meta name="description" content="ODA/EDA Worldwide Soccer team cost and roster breakdown dashboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:        #07090f;
+      --surface:   #0e1420;
+      --card:      #131926;
+      --border:    #1e2a3a;
+      --green:     #22c55e;
+      --gold:      #f59e0b;
+      --text:      #e8edf5;
+      --muted:     #6b7a96;
+      --radius:    12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background: linear-gradient(135deg, #0e1a2e 0%, #0a1520 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-badge {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 0 20px rgba(34,197,94,0.3);
+    }
+    .logo-text h1 { font-size: 16px; font-weight: 700; }
+    .logo-text p { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .header-badge {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green); font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: 20px;
+    }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; }
+
+    aside {
+      background: var(--surface); border-right: 1px solid var(--border);
+      overflow-y: auto; position: sticky; top: 64px; height: calc(100vh - 64px);
+    }
+    .sidebar-header { padding: 20px 16px 12px; border-bottom: 1px solid var(--border); }
+    .sidebar-header h2 { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .team-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; cursor: pointer;
+      border-left: 3px solid transparent; transition: all 0.15s ease;
+    }
+    .team-item:hover { background: rgba(34,197,94,0.05); border-left-color: rgba(34,197,94,0.3); }
+    .team-item.active { background: rgba(34,197,94,0.1); border-left-color: var(--green); }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; transition: background 0.15s; }
+    .team-item.active .team-dot { background: var(--green); }
+    .team-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-item.active .team-item-name { color: var(--green); }
+    .team-item-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    main { overflow-y: auto; padding: 28px; }
+
+    .state-card { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 12px; color: var(--muted); }
+    .state-icon { font-size: 48px; opacity: 0.4; }
+    .state-card p { font-size: 14px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .team-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .team-title h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .team-title p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .team-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid; }
+    .pill-green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+    .pill-gold  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--gold); }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; position: relative; overflow: hidden; transition: border-color 0.2s;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent); }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 8px; }
+    .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.gold  { color: var(--gold); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .cost-row {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .cost-name { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .cost-values { text-align: right; }
+    .cost-total { font-size: 14px; font-weight: 700; }
+    .cost-per-player { font-size: 11px; color: var(--green); margin-top: 2px; }
+    .bar-wrap { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); border-radius: 2px; transition: width 0.6s ease; }
+
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
+    th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,58,0.6); }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(34,197,94,0.04); }
+    .player-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--green); }
+    .money { font-variant-numeric: tabular-nums; }
+
+    /* ── EDITABLE ── */
+    .editable { cursor: text; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; transition: background 0.15s; }
+    .editable:hover { background: rgba(34,197,94,0.1); }
+    .editable:hover::after { content: ' ✏️'; font-size: 10px; opacity: 0.5; }
+    .edit-input {
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.5);
+      border-radius: 6px; color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 500; padding: 4px 8px; outline: none;
+    }
+    .edit-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .edit-input[type="number"] { width: 130px; }
+    .edit-input:not([type]) { width: 100%; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--card); border: 1px solid var(--green); color: var(--text);
+      font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: none; align-items: center; gap: 10px; z-index: 999;
+    }
+    #toast.error { border-color: #ef4444; }
+    #toast.show { display: flex; animation: slideUp 0.25s ease; }
+    @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    footer { border-top: 1px solid var(--border); padding: 16px 28px; text-align: center; font-size: 11px; color: var(--muted); }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-badge">⚽</div>
+    <div class="logo-text">
+      <h1>EDA Worldwide Soccer</h1>
+      <p>Orozco Development Academy — Team Cost Dashboard</p>
+    </div>
+  </div>
+  <span class="header-badge">● LIVE</span>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-header"><h2>Teams</h2></div>
+    <div id="team-list">
+      <div class="state-card" style="min-height:200px;"><div class="spinner"></div></div>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <div class="state-card">
+      <div class="state-icon">⚽</div>
+      <p>Select a team to view cost breakdown</p>
+    </div>
+  </main>
+</div>
+
+<div id="toast"><span id="toast-icon">✅</span><span id="toast-msg">Saved</span></div>
+<footer>EDA Worldwide Soccer · ODA Genesis Database · Live data from Supabase &mdash; <span style="color:var(--green)">Click any value to edit</span></footer>
+
+<script>
+  const SUPABASE_URL = 'https://osrsuvmwbnlvdiearfce.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zcnN1dm13Ym5sdmRpZWFyZmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODIxOTUsImV4cCI6MjA5MTc1ODE5NX0.Wvn-HYb4d4xEcE1h2hNcyP-GyNlYVj3Nu2DUHguxBrQ';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const COST_COLS = [
+    { key: 'registration_fee',            label: 'Registration Fee' },
+    { key: 'equipment_cost',              label: 'Equipment' },
+    { key: 'travel_cost',                 label: 'Travel' },
+    { key: 'coaching_cost',               label: 'Coaching' },
+    { key: 'Admin/Operational/Executive', label: 'Admin / Operational / Executive' },
+    { key: 'Tournament (cost) 1',         label: 'Tournament 1' },
+    { key: 'Tournament (cost) 2',         label: 'Tournament 2' },
+    { key: 'Tournament (cost) 3',         label: 'Tournament 3' },
+    { key: 'Tournament (cost) 4',         label: 'Tournament 4' },
+    { key: 'Tournament (cost) 5',         label: 'Tournament 5' },
+    { key: 'Tournament (cost) 6',         label: 'Tournament 6' },
+  ];
+
+  let allTeams = [];
+
+  function fmt(n) {
+    return '$' + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  async function loadTeams() {
+    const { data } = await sb
+      .from('teams_and_costs')
+      .select('id, team_name, season, total_cost')
+      .is('parent_id', null)
+      .order('team_name');
+    allTeams = data || [];
+    renderSidebar();
+  }
+
+  function renderSidebar() {
+    const el = document.getElementById('team-list');
+    el.innerHTML = allTeams.map(t => `
+      <div class="team-item" id="ti-${t.id}" onclick="selectTeam('${t.id}')">
+        <div class="team-dot"></div>
+        <div>
+          <div class="team-item-name">${t.team_name || '—'}</div>
+          <div class="team-item-meta">${t.season || 'No season set'}</div>
+        </div>
+      </div>
+    `).join('') || '<p style="padding:16px;color:var(--muted);font-size:13px;">No teams found.</p>';
+  }
+
+  async function selectTeam(teamId) {
+    document.querySelectorAll('.team-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('ti-' + teamId)?.classList.add('active');
+
+    document.getElementById('main-content').innerHTML =
+      '<div class="state-card"><div class="spinner"></div><p>Loading…</p></div>';
+
+    const [{ data: team }, { data: players }] = await Promise.all([
+      sb.from('teams_and_costs').select('*').eq('id', teamId).single(),
+      sb.from('teams_and_costs').select('id, team_name').eq('parent_id', teamId).order('team_name'),
+    ]);
+
+    renderTeam(team, players || []);
+  }
+
+  function renderTeam(team, players) {
+    const count    = players.length;
+    const total    = parseFloat(team.total_cost || 0);
+    const perPlayer = count > 0 ? total / count : 0;
+    const costs    = COST_COLS.map(c => parseFloat(team[c.key] || 0));
+    const maxCost  = Math.max(...costs, 1);
+
+    const costRows = COST_COLS.map((c, i) => {
+      const v   = costs[i];
+      const pp  = count > 0 ? v / count : 0;
+      const pct = Math.round((v / maxCost) * 100);
+      return `
+        <div class="cost-row">
+          <div style="flex:1;min-width:0;">
+            <div class="cost-name">${c.label}</div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="cost-values" style="margin-left:16px;">
+            <div class="cost-total money editable"
+              onclick="editCost(this,'${team.id}','${c.key}',${v})">${fmt(v)}</div>
+            <div class="cost-per-player money">${fmt(pp)} / player</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const playerRows = players.map((p, i) => {
+      const name = p.team_name || '';
+      return `<tr>
+        <td><span class="player-num">${i + 1}</span></td>
+        <td><span class="editable" onclick="editPlayer(this,'${p.id}','${name.replace(/'/g,"&#39;")}')" title="Click to edit">
+          ${name || '<span style="color:var(--muted);font-style:italic;">Click to add name</span>'}
+        </span></td>
+        <td class="money">${fmt(perPlayer)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="team-header">
+        <div class="team-title">
+          <h2>${team.team_name || '—'}</h2>
+          <p>Season ${team.season || 'N/A'} &middot; ${count} players on roster</p>
+        </div>
+        <div class="team-pills">
+          <span class="pill pill-green">⚽ ${count} Players</span>
+          <span class="pill pill-gold">💰 ${fmt(total)} Total</span>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Team Cost</div>
+          <div class="stat-value gold money">${fmt(total)}</div>
+          <div class="stat-sub">All categories combined</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cost Per Player</div>
+          <div class="stat-value green money">${fmt(perPlayer)}</div>
+          <div class="stat-sub">÷ ${count} players on roster</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Roster Size</div>
+          <div class="stat-value">${count}</div>
+          <div class="stat-sub">Players currently listed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Season</div>
+          <div class="stat-value" style="font-size:18px;">${team.season || '—'}</div>
+          <div class="stat-sub">Active season</div>
+        </div>
+      </div>
+
+      <div class="section-title">Cost Breakdown by Category</div>
+      <div class="cost-grid">
+        ${costRows || '<p style="color:var(--muted);font-size:13px;">No costs entered yet.</p>'}
+      </div>
+
+      <div class="section-title">Player Roster &amp; Individual Cost Share</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Player Name</th><th>Cost Per Player</th></tr></thead>
+          <tbody>
+            ${playerRows || '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:24px;">No players listed.</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  loadTeams();
+
+  // ── TOAST ──
+  let _tt;
+  function showToast(msg, err = false) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    document.getElementById('toast-icon').textContent = err ? '❌' : '✅';
+    t.className = 'show' + (err ? ' error' : '');
+    clearTimeout(_tt);
+    _tt = setTimeout(() => t.className = '', 3000);
+  }
+
+  // ── EDIT PLAYER NAME ──
+  function editPlayer(el, id, current) {
+    const input = document.createElement('input');
+    input.className = 'edit-input';
+    input.value = current;
+    el.replaceWith(input);
+    input.focus(); input.select();
+    async function save() {
+      const val = input.value.trim();
+      const span = document.createElement('span');
+      span.className = 'editable';
+      span.title = 'Click to edit';
+      span.onclick = () => editPlayer(span, id, val);
+      span.innerHTML = val || '<span style="color:var(--muted);font-style:italic;">Click to add name</span>';
+      input.replaceWith(span);
+      const { error } = await sb.from('teams_and_costs').update({ team_name: val }).eq('id', id);
+      error ? showToast('Error: ' + error.message, true) : showToast('Player name saved');
+    }
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
+  }
+
+  // ── EDIT COST VALUE ──
+  function editCost(el, teamId, col, current) {
+    const input = document.createElement('input');
+    input.className = 'edit-input';
+    input.type = 'number'; input.step = '0.01';
+    input.value = current;
+    el.replaceWith(input);
+    input.focus(); input.select();
+    async function save() {
+      const val = parseFloat(input.value) || 0;
+      const div = document.createElement('div');
+      div.className = 'cost-total money editable';
+      div.onclick = () => editCost(div, teamId, col, val);
+      div.textContent = fmt(val);
+      input.replaceWith(div);
+      const update = {}; update[col] = val;
+      const { error } = await sb.from('teams_and_costs').update(update).eq('id', teamId);
+      error ? showToast('Error: ' + error.message, true) : showToast('Cost saved — reload to update totals');
+    }
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
+  }
+</script>
+</body>
+</html>
