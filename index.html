@@ -10,147 +10,161 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg:        #07090f;
-      --surface:   #0e1420;
-      --card:      #131926;
-      --border:    #1e2a3a;
-      --green:     #22c55e;
-      --gold:      #f59e0b;
-      --text:      #e8edf5;
-      --muted:     #6b7a96;
-      --radius:    12px;
+      --bg:      #07090f;
+      --surface: #0e1420;
+      --card:    #131926;
+      --border:  #1e2a3a;
+      --green:   #22c55e;
+      --gold:    #f59e0b;
+      --blue:    #3b82f6;
+      --text:    #e8edf5;
+      --muted:   #6b7a96;
+      --radius:  12px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
+    /* HEADER */
     header {
-      background: linear-gradient(135deg, #0e1a2e 0%, #0a1520 100%);
+      background: linear-gradient(135deg, #0e1a2e, #0a1520);
       border-bottom: 1px solid var(--border);
       padding: 0 28px; height: 64px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
     .logo-area { display: flex; align-items: center; gap: 14px; }
-    .logo-badge {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--green), #16a34a);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      font-size: 20px; box-shadow: 0 0 20px rgba(34,197,94,0.3);
-    }
+    .logo-badge { width: 40px; height: 40px; background: linear-gradient(135deg, var(--green), #16a34a); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 20px rgba(34,197,94,0.3); }
     .logo-text h1 { font-size: 16px; font-weight: 700; }
-    .logo-text p { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .header-badge {
-      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
-      color: var(--green); font-size: 11px; font-weight: 600;
-      padding: 4px 12px; border-radius: 20px;
-    }
+    .logo-text p  { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .header-badge { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--green); font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
 
+    /* LAYOUT */
     .layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; }
 
-    aside {
-      background: var(--surface); border-right: 1px solid var(--border);
-      overflow-y: auto; position: sticky; top: 64px; height: calc(100vh - 64px);
-    }
-    .sidebar-header { padding: 20px 16px 12px; border-bottom: 1px solid var(--border); }
+    /* SIDEBAR */
+    aside { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; position: sticky; top: 64px; height: calc(100vh - 64px); }
+    .sidebar-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
+    .sidebar-tab { padding: 12px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .sidebar-tab:hover { color: var(--text); }
+    .sidebar-tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .sidebar-section { display: none; }
+    .sidebar-section.active { display: block; }
+    .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
     .sidebar-header h2 { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-
-    .team-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 16px; cursor: pointer;
-      border-left: 3px solid transparent; transition: all 0.15s ease;
-    }
+    .team-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
     .team-item:hover { background: rgba(34,197,94,0.05); border-left-color: rgba(34,197,94,0.3); }
     .team-item.active { background: rgba(34,197,94,0.1); border-left-color: var(--green); }
-    .team-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; transition: background 0.15s; }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
     .team-item.active .team-dot { background: var(--green); }
     .team-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .team-item.active .team-item-name { color: var(--green); }
     .team-item-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .org-nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; border-left: 3px solid transparent; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; }
+    .org-nav-item:hover { background: rgba(59,130,246,0.05); color: var(--text); border-left-color: rgba(59,130,246,0.3); }
+    .org-nav-item.active { background: rgba(59,130,246,0.1); color: var(--blue); border-left-color: var(--blue); }
 
+    /* MAIN */
     main { overflow-y: auto; padding: 28px; }
-
     .state-card { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 12px; color: var(--muted); }
     .state-icon { font-size: 48px; opacity: 0.4; }
-    .state-card p { font-size: 14px; }
     .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* TEAM HEADER */
     .team-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
     .team-title h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
-    .team-title p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .team-title p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
     .team-pills { display: flex; gap: 8px; flex-wrap: wrap; }
     .pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid; }
-    .pill-green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+    .pill-green { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);  color: var(--green); }
     .pill-gold  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--gold); }
+    .pill-blue  { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--blue); }
 
+    /* STAT GRID */
     .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-    .stat-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 20px; position: relative; overflow: hidden; transition: border-color 0.2s;
-    }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
     .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent); }
+    .stat-card.blue-top::before { background: linear-gradient(90deg, var(--blue), transparent); }
+    .stat-card.gold-top::before { background: linear-gradient(90deg, var(--gold), transparent); }
     .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 8px; }
-    .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-value { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
     .stat-value.green { color: var(--green); }
     .stat-value.gold  { color: var(--gold); }
+    .stat-value.blue  { color: var(--blue); }
     .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
+    /* SECTION TITLE */
     .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
     .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+    /* COST GRID */
     .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 28px; }
-    .cost-row {
-      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-    }
+    .cost-row { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .cost-row.overhead { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); }
     .cost-name { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .cost-name.blue { color: var(--blue); }
     .cost-values { text-align: right; }
     .cost-total { font-size: 14px; font-weight: 700; }
     .cost-per-player { font-size: 11px; color: var(--green); margin-top: 2px; }
+    .cost-per-player.blue { color: var(--blue); }
     .bar-wrap { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); border-radius: 2px; transition: width 0.6s ease; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); border-radius: 2px; }
+    .bar-fill.blue { background: linear-gradient(90deg, var(--blue), #6366f1); }
 
-    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    /* TRUE TOTAL BANNER */
+    .true-total-banner { background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(34,197,94,0.05)); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .true-total-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .true-total-value { font-size: 32px; font-weight: 800; color: var(--gold); letter-spacing: -0.02em; }
+    .true-total-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* MASTER ACCOUNTS TABLE */
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 28px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead { background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
     th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
     td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,58,0.6); }
     tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: rgba(34,197,94,0.04); }
+    tbody tr:hover { background: rgba(34,197,94,0.03); }
     .player-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--green); }
+    .cat-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .cat-coaching { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .cat-admin    { background: rgba(59,130,246,0.1); color: var(--blue);  border: 1px solid rgba(59,130,246,0.3); }
     .money { font-variant-numeric: tabular-nums; }
 
-    /* ── EDITABLE ── */
+    /* ADD FORM */
+    .add-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 28px; }
+    .add-form h3 { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .form-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .form-field input, .form-field select {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 13px; padding: 8px 12px; outline: none;
+    }
+    .form-field input:focus, .form-field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .btn { padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+    .btn-blue  { background: var(--blue); color: #fff; }
+    .btn-blue:hover  { background: #2563eb; }
+    .btn-red   { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .btn-red:hover   { background: rgba(239,68,68,0.25); }
+
+    /* EDITABLE */
     .editable { cursor: text; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; transition: background 0.15s; }
     .editable:hover { background: rgba(34,197,94,0.1); }
     .editable:hover::after { content: ' ✏️'; font-size: 10px; opacity: 0.5; }
-    .edit-input {
-      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.5);
-      border-radius: 6px; color: var(--text); font-family: 'Inter', sans-serif;
-      font-size: 13px; font-weight: 500; padding: 4px 8px; outline: none;
-    }
+    .edit-input { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.5); border-radius: 6px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 4px 8px; outline: none; }
     .edit-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
     .edit-input[type="number"] { width: 130px; }
     .edit-input:not([type]) { width: 100%; }
 
-    /* ── TOAST ── */
-    #toast {
-      position: fixed; bottom: 28px; right: 28px;
-      background: var(--card); border: 1px solid var(--green); color: var(--text);
-      font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 10px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: none; align-items: center; gap: 10px; z-index: 999;
-    }
+    /* TOAST */
+    #toast { position: fixed; bottom: 28px; right: 28px; background: var(--card); border: 1px solid var(--green); color: var(--text); font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: none; align-items: center; gap: 10px; z-index: 999; }
     #toast.error { border-color: #ef4444; }
     #toast.show { display: flex; animation: slideUp 0.25s ease; }
     @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     footer { border-top: 1px solid var(--border); padding: 16px 28px; text-align: center; font-size: 11px; color: var(--muted); }
-
-    @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
-      aside { position: static; height: auto; }
-      main { padding: 16px; }
-    }
+    @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } aside { position: static; height: auto; } main { padding: 16px; } }
   </style>
 </head>
 <body>
@@ -168,22 +182,33 @@
 
 <div class="layout">
   <aside>
-    <div class="sidebar-header"><h2>Teams</h2></div>
-    <div id="team-list">
-      <div class="state-card" style="min-height:200px;"><div class="spinner"></div></div>
+    <div class="sidebar-tabs">
+      <div class="sidebar-tab active" id="tab-teams" onclick="switchTab('teams')">⚽ Teams</div>
+      <div class="sidebar-tab" id="tab-org" onclick="switchTab('org')">🏢 Org</div>
+    </div>
+
+    <div class="sidebar-section active" id="section-teams">
+      <div class="sidebar-header"><h2>All Teams</h2></div>
+      <div id="team-list"><div style="padding:20px;text-align:center;"><div class="spinner" style="margin:auto;"></div></div></div>
+    </div>
+
+    <div class="sidebar-section" id="section-org">
+      <div class="sidebar-header"><h2>Organization</h2></div>
+      <div class="org-nav-item active" id="nav-master" onclick="showMasterAccounts()">👥 Master Accounts</div>
+      <div class="org-nav-item" id="nav-overhead" onclick="showOverviewPanel()">📊 Overhead Summary</div>
     </div>
   </aside>
 
   <main id="main-content">
     <div class="state-card">
       <div class="state-icon">⚽</div>
-      <p>Select a team to view cost breakdown</p>
+      <p>Select a team or view Org accounts</p>
     </div>
   </main>
 </div>
 
 <div id="toast"><span id="toast-icon">✅</span><span id="toast-msg">Saved</span></div>
-<footer>EDA Worldwide Soccer · ODA Genesis Database · Live data from Supabase &mdash; <span style="color:var(--green)">Click any value to edit</span></footer>
+<footer>EDA Worldwide Soccer · ODA Genesis Database · Live from Supabase — <span style="color:var(--green)">Click any value to edit</span></footer>
 
 <script>
   const SUPABASE_URL = 'https://osrsuvmwbnlvdiearfce.supabase.co';
@@ -191,151 +216,21 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const COST_COLS = [
-    { key: 'registration_fee',            label: 'Registration Fee' },
-    { key: 'equipment_cost',              label: 'Equipment' },
-    { key: 'travel_cost',                 label: 'Travel' },
-    { key: 'coaching_cost',               label: 'Coaching' },
-    { key: 'Admin/Operational/Executive', label: 'Admin / Operational / Executive' },
-    { key: 'Tournament (cost) 1',         label: 'Tournament 1' },
-    { key: 'Tournament (cost) 2',         label: 'Tournament 2' },
-    { key: 'Tournament (cost) 3',         label: 'Tournament 3' },
-    { key: 'Tournament (cost) 4',         label: 'Tournament 4' },
-    { key: 'Tournament (cost) 5',         label: 'Tournament 5' },
-    { key: 'Tournament (cost) 6',         label: 'Tournament 6' },
+    { key: 'registration_fee',  label: 'Registration Fee' },
+    { key: 'equipment_cost',    label: 'Equipment' },
+    { key: 'travel_cost',       label: 'Travel' },
+    { key: 'Tournament (cost) 1', label: 'Tournament 1' },
+    { key: 'Tournament (cost) 2', label: 'Tournament 2' },
+    { key: 'Tournament (cost) 3', label: 'Tournament 3' },
+    { key: 'Tournament (cost) 4', label: 'Tournament 4' },
+    { key: 'Tournament (cost) 5', label: 'Tournament 5' },
+    { key: 'Tournament (cost) 6', label: 'Tournament 6' },
   ];
 
   let allTeams = [];
+  let overhead = { coaching_per_team: 0, admin_per_team: 0, overhead_per_team: 0, team_count: 0, total_coaching: 0, total_admin: 0, grand_total: 0 };
 
-  function fmt(n) {
-    return '$' + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  async function loadTeams() {
-    const { data } = await sb
-      .from('teams_and_costs')
-      .select('id, team_name, season, total_cost')
-      .is('parent_id', null)
-      .order('team_name');
-    allTeams = data || [];
-    renderSidebar();
-  }
-
-  function renderSidebar() {
-    const el = document.getElementById('team-list');
-    el.innerHTML = allTeams.map(t => `
-      <div class="team-item" id="ti-${t.id}" onclick="selectTeam('${t.id}')">
-        <div class="team-dot"></div>
-        <div>
-          <div class="team-item-name">${t.team_name || '—'}</div>
-          <div class="team-item-meta">${t.season || 'No season set'}</div>
-        </div>
-      </div>
-    `).join('') || '<p style="padding:16px;color:var(--muted);font-size:13px;">No teams found.</p>';
-  }
-
-  async function selectTeam(teamId) {
-    document.querySelectorAll('.team-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('ti-' + teamId)?.classList.add('active');
-
-    document.getElementById('main-content').innerHTML =
-      '<div class="state-card"><div class="spinner"></div><p>Loading…</p></div>';
-
-    const [{ data: team }, { data: players }] = await Promise.all([
-      sb.from('teams_and_costs').select('*').eq('id', teamId).single(),
-      sb.from('teams_and_costs').select('id, team_name').eq('parent_id', teamId).order('team_name'),
-    ]);
-
-    renderTeam(team, players || []);
-  }
-
-  function renderTeam(team, players) {
-    const count    = players.length;
-    const total    = parseFloat(team.total_cost || 0);
-    const perPlayer = count > 0 ? total / count : 0;
-    const costs    = COST_COLS.map(c => parseFloat(team[c.key] || 0));
-    const maxCost  = Math.max(...costs, 1);
-
-    const costRows = COST_COLS.map((c, i) => {
-      const v   = costs[i];
-      const pp  = count > 0 ? v / count : 0;
-      const pct = Math.round((v / maxCost) * 100);
-      return `
-        <div class="cost-row">
-          <div style="flex:1;min-width:0;">
-            <div class="cost-name">${c.label}</div>
-            <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
-          </div>
-          <div class="cost-values" style="margin-left:16px;">
-            <div class="cost-total money editable"
-              onclick="editCost(this,'${team.id}','${c.key}',${v})">${fmt(v)}</div>
-            <div class="cost-per-player money">${fmt(pp)} / player</div>
-          </div>
-        </div>`;
-    }).join('');
-
-    const playerRows = players.map((p, i) => {
-      const name = p.team_name || '';
-      return `<tr>
-        <td><span class="player-num">${i + 1}</span></td>
-        <td><span class="editable" onclick="editPlayer(this,'${p.id}','${name.replace(/'/g,"&#39;")}')" title="Click to edit">
-          ${name || '<span style="color:var(--muted);font-style:italic;">Click to add name</span>'}
-        </span></td>
-        <td class="money">${fmt(perPlayer)}</td>
-      </tr>`;
-    }).join('');
-
-    document.getElementById('main-content').innerHTML = `
-      <div class="team-header">
-        <div class="team-title">
-          <h2>${team.team_name || '—'}</h2>
-          <p>Season ${team.season || 'N/A'} &middot; ${count} players on roster</p>
-        </div>
-        <div class="team-pills">
-          <span class="pill pill-green">⚽ ${count} Players</span>
-          <span class="pill pill-gold">💰 ${fmt(total)} Total</span>
-        </div>
-      </div>
-
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Team Cost</div>
-          <div class="stat-value gold money">${fmt(total)}</div>
-          <div class="stat-sub">All categories combined</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Cost Per Player</div>
-          <div class="stat-value green money">${fmt(perPlayer)}</div>
-          <div class="stat-sub">÷ ${count} players on roster</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Roster Size</div>
-          <div class="stat-value">${count}</div>
-          <div class="stat-sub">Players currently listed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Season</div>
-          <div class="stat-value" style="font-size:18px;">${team.season || '—'}</div>
-          <div class="stat-sub">Active season</div>
-        </div>
-      </div>
-
-      <div class="section-title">Cost Breakdown by Category</div>
-      <div class="cost-grid">
-        ${costRows || '<p style="color:var(--muted);font-size:13px;">No costs entered yet.</p>'}
-      </div>
-
-      <div class="section-title">Player Roster &amp; Individual Cost Share</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Player Name</th><th>Cost Per Player</th></tr></thead>
-          <tbody>
-            ${playerRows || '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:24px;">No players listed.</td></tr>'}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  loadTeams();
+  function fmt(n) { return '$' + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
   // ── TOAST ──
   let _tt;
@@ -348,42 +243,313 @@
     _tt = setTimeout(() => t.className = '', 3000);
   }
 
-  // ── EDIT PLAYER NAME ──
+  // ── TABS ──
+  function switchTab(tab) {
+    document.getElementById('tab-teams').classList.toggle('active', tab === 'teams');
+    document.getElementById('tab-org').classList.toggle('active', tab === 'org');
+    document.getElementById('section-teams').classList.toggle('active', tab === 'teams');
+    document.getElementById('section-org').classList.toggle('active', tab === 'org');
+    if (tab === 'org') showMasterAccounts();
+  }
+
+  // ── LOAD DATA ──
+  async function init() {
+    const [{ data: teams }, { data: ov }] = await Promise.all([
+      sb.from('teams_and_costs').select('id, team_name, season, total_cost').is('parent_id', null).order('team_name'),
+      sb.from('overhead_allocation').select('*').single(),
+    ]);
+    allTeams = teams || [];
+    if (ov) overhead = ov;
+    renderSidebar();
+  }
+
+  function renderSidebar() {
+    const el = document.getElementById('team-list');
+    el.innerHTML = allTeams.map(t => `
+      <div class="team-item" id="ti-${t.id}" onclick="selectTeam('${t.id}')">
+        <div class="team-dot"></div>
+        <div>
+          <div class="team-item-name">${t.team_name || '—'}</div>
+          <div class="team-item-meta">${t.season || 'No season'}</div>
+        </div>
+      </div>`).join('') || '<p style="padding:16px;color:var(--muted);font-size:13px;">No teams found.</p>';
+  }
+
+  // ── SELECT TEAM ──
+  async function selectTeam(teamId) {
+    document.querySelectorAll('.team-item').forEach(e => e.classList.remove('active'));
+    document.getElementById('ti-' + teamId)?.classList.add('active');
+    document.getElementById('main-content').innerHTML = '<div class="state-card"><div class="spinner"></div><p>Loading…</p></div>';
+
+    const [{ data: team }, { data: players }, { data: ov }] = await Promise.all([
+      sb.from('teams_and_costs').select('*').eq('id', teamId).single(),
+      sb.from('teams_and_costs').select('id, team_name').eq('parent_id', teamId).order('team_name'),
+      sb.from('overhead_allocation').select('*').single(),
+    ]);
+
+    if (ov) overhead = ov;
+    renderTeam(team, players || []);
+  }
+
+  // ── RENDER TEAM ──
+  function renderTeam(team, players) {
+    const count       = players.length;
+    const teamCost    = parseFloat(team.total_cost || 0);
+    const ohShare     = parseFloat(overhead.overhead_per_team || 0);
+    const trueTotalTeam = teamCost + ohShare;
+    const truePerPlayer = count > 0 ? trueTotalTeam / count : 0;
+    const costs       = COST_COLS.map(c => parseFloat(team[c.key] || 0));
+    const maxCost     = Math.max(...costs, ohShare, 1);
+
+    const costRows = COST_COLS.map((c, i) => {
+      const v = costs[i];
+      const pp = count > 0 ? v / count : 0;
+      const pct = Math.round((v / maxCost) * 100);
+      return `
+        <div class="cost-row">
+          <div style="flex:1;min-width:0;">
+            <div class="cost-name">${c.label}</div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="cost-values" style="margin-left:16px;">
+            <div class="cost-total money editable" onclick="editCost(this,'${team.id}','${c.key}',${v})">${fmt(v)}</div>
+            <div class="cost-per-player money">${fmt(pp)} / player</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const coachPct = Math.round((overhead.coaching_per_team / maxCost) * 100);
+    const adminPct  = Math.round((overhead.admin_per_team  / maxCost) * 100);
+    const overheadRows = `
+      <div class="cost-row overhead">
+        <div style="flex:1;min-width:0;">
+          <div class="cost-name blue">Coaching (shared overhead)</div>
+          <div class="bar-wrap"><div class="bar-fill blue" style="width:${coachPct}%"></div></div>
+        </div>
+        <div class="cost-values" style="margin-left:16px;">
+          <div class="cost-total money">${fmt(overhead.coaching_per_team)}</div>
+          <div class="cost-per-player blue money">${fmt(count > 0 ? overhead.coaching_per_team / count : 0)} / player</div>
+        </div>
+      </div>
+      <div class="cost-row overhead">
+        <div style="flex:1;min-width:0;">
+          <div class="cost-name blue">Admin / Operational / Executive (shared overhead)</div>
+          <div class="bar-wrap"><div class="bar-fill blue" style="width:${adminPct}%"></div></div>
+        </div>
+        <div class="cost-values" style="margin-left:16px;">
+          <div class="cost-total money">${fmt(overhead.admin_per_team)}</div>
+          <div class="cost-per-player blue money">${fmt(count > 0 ? overhead.admin_per_team / count : 0)} / player</div>
+        </div>
+      </div>`;
+
+    const playerRows = players.map((p, i) => {
+      const name = p.team_name || '';
+      return `<tr>
+        <td><span class="player-num">${i + 1}</span></td>
+        <td><span class="editable" onclick="editPlayer(this,'${p.id}','${name.replace(/'/g,"&#39;")}')" title="Click to edit">${name || '<span style="color:var(--muted);font-style:italic;">Click to add name</span>'}</span></td>
+        <td class="money">${fmt(truePerPlayer)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="team-header">
+        <div class="team-title">
+          <h2>${team.team_name || '—'}</h2>
+          <p>Season ${team.season || 'N/A'} · ${count} players · ${overhead.team_count} total teams</p>
+        </div>
+        <div class="team-pills">
+          <span class="pill pill-green">⚽ ${count} Players</span>
+          <span class="pill pill-gold">💰 ${fmt(teamCost)} Team Costs</span>
+          <span class="pill pill-blue">🏢 ${fmt(ohShare)} Overhead</span>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card gold-top">
+          <div class="stat-label">Team-Specific Costs</div>
+          <div class="stat-value gold money">${fmt(teamCost)}</div>
+          <div class="stat-sub">Registration, travel, tournaments</div>
+        </div>
+        <div class="stat-card blue-top">
+          <div class="stat-label">Overhead Share</div>
+          <div class="stat-value blue money">${fmt(ohShare)}</div>
+          <div class="stat-sub">1 of ${overhead.team_count} teams · edit in Org tab</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">True Total (Team)</div>
+          <div class="stat-value money" style="color:var(--text);">${fmt(trueTotalTeam)}</div>
+          <div class="stat-sub">Team costs + overhead</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">True Cost / Player</div>
+          <div class="stat-value green money">${fmt(truePerPlayer)}</div>
+          <div class="stat-sub">÷ ${count} players on roster</div>
+        </div>
+      </div>
+
+      <div class="section-title">Team-Specific Costs</div>
+      <div class="cost-grid">${costRows || '<p style="color:var(--muted);font-size:13px;">No costs entered.</p>'}</div>
+
+      <div class="section-title">Overhead Allocation (from Master Accounts)</div>
+      <div class="cost-grid">${overheadRows}</div>
+
+      <div class="section-title">Player Roster &amp; True Cost Per Player</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Player Name</th><th>True Cost / Player</th></tr></thead>
+          <tbody>${playerRows || '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:24px;">No players listed.</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // ── MASTER ACCOUNTS ──
+  async function showMasterAccounts() {
+    document.getElementById('nav-master').classList.add('active');
+    document.getElementById('nav-overhead').classList.remove('active');
+    document.getElementById('main-content').innerHTML = '<div class="state-card"><div class="spinner"></div></div>';
+
+    const [{ data: accounts }, { data: ov }] = await Promise.all([
+      sb.from('master_accounts').select('*').order('category').order('name'),
+      sb.from('overhead_allocation').select('*').single(),
+    ]);
+    if (ov) overhead = ov;
+    renderMasterAccounts(accounts || []);
+  }
+
+  function renderMasterAccounts(accounts) {
+    const rows = accounts.map(a => `
+      <tr>
+        <td><span class="cat-badge ${a.category === 'coaching' ? 'cat-coaching' : 'cat-admin'}">${a.category === 'coaching' ? 'Coaching' : 'Admin/Exec'}</span></td>
+        <td><span class="editable" onclick="editAccountField(this,'${a.id}','name','${a.name.replace(/'/g,"&#39;")}')">${a.name}</span></td>
+        <td><span class="editable" onclick="editAccountField(this,'${a.id}','role','${(a.role||'').replace(/'/g,"&#39;")}')">${a.role || '<span style="color:var(--muted)">—</span>'}</span></td>
+        <td class="money"><span class="editable" onclick="editAccountNum(this,'${a.id}','amount',${a.amount})">${fmt(a.amount)}</span></td>
+        <td>${a.frequency}</td>
+        <td><button class="btn btn-red" onclick="deleteAccount('${a.id}')">Remove</button></td>
+      </tr>`).join('');
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="team-header">
+        <div class="team-title">
+          <h2>Master Accounts</h2>
+          <p>Org-wide payroll &amp; overhead — split equally across all ${overhead.team_count} active teams</p>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Coaching</div>
+          <div class="stat-value green money">${fmt(overhead.total_coaching)}</div>
+          <div class="stat-sub">${fmt(overhead.coaching_per_team)} per team</div>
+        </div>
+        <div class="stat-card blue-top">
+          <div class="stat-label">Total Admin / Exec</div>
+          <div class="stat-value blue money">${fmt(overhead.total_admin)}</div>
+          <div class="stat-sub">${fmt(overhead.admin_per_team)} per team</div>
+        </div>
+        <div class="stat-card gold-top">
+          <div class="stat-label">Total Overhead</div>
+          <div class="stat-value gold money">${fmt(overhead.grand_total)}</div>
+          <div class="stat-sub">${fmt(overhead.overhead_per_team)} per team · ${overhead.team_count} teams</div>
+        </div>
+      </div>
+
+      <div class="add-form">
+        <h3>➕ Add New Role</h3>
+        <div class="form-grid">
+          <div class="form-field"><label>Category</label>
+            <select id="new-cat">
+              <option value="coaching">Coaching</option>
+              <option value="admin_operational_executive">Admin / Operational / Executive</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Name</label><input id="new-name" placeholder="e.g. Maria Garcia" /></div>
+          <div class="form-field"><label>Role</label><input id="new-role" placeholder="e.g. Head Coach" /></div>
+          <div class="form-field"><label>Amount ($)</label><input id="new-amount" type="number" step="0.01" placeholder="0.00" /></div>
+          <div class="form-field"><label>Frequency</label>
+            <select id="new-freq">
+              <option value="per_season">Per Season</option>
+              <option value="annual">Annual</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-blue" onclick="addAccount()">Add Role</button>
+      </div>
+
+      <div class="section-title">All Roles</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Category</th><th>Name</th><th>Role</th><th>Amount</th><th>Frequency</th><th></th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px;">No accounts yet. Add the first role above.</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  }
+
+  async function addAccount() {
+    const cat    = document.getElementById('new-cat').value;
+    const name   = document.getElementById('new-name').value.trim();
+    const role   = document.getElementById('new-role').value.trim();
+    const amount = parseFloat(document.getElementById('new-amount').value) || 0;
+    const freq   = document.getElementById('new-freq').value;
+    if (!name) { showToast('Name is required', true); return; }
+    const { error } = await sb.from('master_accounts').insert({ category: cat, name, role, amount, frequency: freq });
+    error ? showToast('Error: ' + error.message, true) : (showToast('Role added'), showMasterAccounts());
+  }
+
+  async function deleteAccount(id) {
+    if (!confirm('Remove this role?')) return;
+    const { error } = await sb.from('master_accounts').delete().eq('id', id);
+    error ? showToast('Error: ' + error.message, true) : (showToast('Removed'), showMasterAccounts());
+  }
+
+  // ── OVERHEAD SUMMARY ──
+  async function showOverviewPanel() {
+    document.getElementById('nav-overhead').classList.add('active');
+    document.getElementById('nav-master').classList.remove('active');
+    const { data: ov } = await sb.from('overhead_allocation').select('*').single();
+    if (ov) overhead = ov;
+    document.getElementById('main-content').innerHTML = `
+      <div class="team-title" style="margin-bottom:24px;">
+        <h2>Overhead Summary</h2>
+        <p>How org-wide costs distribute across ${ov.team_count} active teams</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Active Teams</div><div class="stat-value">${ov.team_count}</div><div class="stat-sub">Each shares overhead equally</div></div>
+        <div class="stat-card"><div class="stat-label">Total Coaching</div><div class="stat-value green money">${fmt(ov.total_coaching)}</div><div class="stat-sub">${fmt(ov.coaching_per_team)} per team</div></div>
+        <div class="stat-card blue-top"><div class="stat-label">Total Admin / Exec</div><div class="stat-value blue money">${fmt(ov.total_admin)}</div><div class="stat-sub">${fmt(ov.admin_per_team)} per team</div></div>
+        <div class="stat-card gold-top"><div class="stat-label">Overhead Per Team</div><div class="stat-value gold money">${fmt(ov.overhead_per_team)}</div><div class="stat-sub">Added to each team's true total</div></div>
+      </div>
+      <div class="true-total-banner">
+        <div><div class="true-total-label">Total Org Overhead</div><div class="true-total-sub">Coaching + Admin across all ${ov.team_count} teams</div></div>
+        <div><div class="true-total-value money">${fmt(ov.grand_total)}</div></div>
+      </div>
+      <p style="color:var(--muted);font-size:13px;">Add or edit roles in <strong style="color:var(--text)">👥 Master Accounts</strong>. Numbers update instantly.</p>`;
+  }
+
+  // ── INLINE EDIT ──
   function editPlayer(el, id, current) {
-    const input = document.createElement('input');
-    input.className = 'edit-input';
-    input.value = current;
-    el.replaceWith(input);
-    input.focus(); input.select();
+    const input = document.createElement('input'); input.className = 'edit-input'; input.value = current;
+    el.replaceWith(input); input.focus(); input.select();
     async function save() {
       const val = input.value.trim();
-      const span = document.createElement('span');
-      span.className = 'editable';
-      span.title = 'Click to edit';
+      const span = document.createElement('span'); span.className = 'editable'; span.title = 'Click to edit';
       span.onclick = () => editPlayer(span, id, val);
       span.innerHTML = val || '<span style="color:var(--muted);font-style:italic;">Click to add name</span>';
       input.replaceWith(span);
       const { error } = await sb.from('teams_and_costs').update({ team_name: val }).eq('id', id);
-      error ? showToast('Error: ' + error.message, true) : showToast('Player name saved');
+      error ? showToast('Error: ' + error.message, true) : showToast('Saved');
     }
     input.addEventListener('blur', save);
     input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
   }
 
-  // ── EDIT COST VALUE ──
   function editCost(el, teamId, col, current) {
-    const input = document.createElement('input');
-    input.className = 'edit-input';
-    input.type = 'number'; input.step = '0.01';
-    input.value = current;
-    el.replaceWith(input);
-    input.focus(); input.select();
+    const input = document.createElement('input'); input.className = 'edit-input'; input.type = 'number'; input.step = '0.01'; input.value = current;
+    el.replaceWith(input); input.focus(); input.select();
     async function save() {
       const val = parseFloat(input.value) || 0;
-      const div = document.createElement('div');
-      div.className = 'cost-total money editable';
-      div.onclick = () => editCost(div, teamId, col, val);
-      div.textContent = fmt(val);
+      const div = document.createElement('div'); div.className = 'cost-total money editable';
+      div.onclick = () => editCost(div, teamId, col, val); div.textContent = fmt(val);
       input.replaceWith(div);
       const update = {}; update[col] = val;
       const { error } = await sb.from('teams_and_costs').update(update).eq('id', teamId);
@@ -392,6 +558,40 @@
     input.addEventListener('blur', save);
     input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
   }
+
+  function editAccountField(el, id, col, current) {
+    const input = document.createElement('input'); input.className = 'edit-input'; input.value = current;
+    el.replaceWith(input); input.focus(); input.select();
+    async function save() {
+      const val = input.value.trim();
+      const span = document.createElement('span'); span.className = 'editable';
+      span.onclick = () => editAccountField(span, id, col, val); span.textContent = val || '—';
+      input.replaceWith(span);
+      const update = {}; update[col] = val;
+      const { error } = await sb.from('master_accounts').update(update).eq('id', id);
+      error ? showToast('Error: ' + error.message, true) : showToast('Saved');
+    }
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
+  }
+
+  function editAccountNum(el, id, col, current) {
+    const input = document.createElement('input'); input.className = 'edit-input'; input.type = 'number'; input.step = '0.01'; input.value = current;
+    el.replaceWith(input); input.focus(); input.select();
+    async function save() {
+      const val = parseFloat(input.value) || 0;
+      const span = document.createElement('span'); span.className = 'editable money';
+      span.onclick = () => editAccountNum(span, id, col, val); span.textContent = fmt(val);
+      input.replaceWith(span);
+      const update = {}; update[col] = val;
+      const { error } = await sb.from('master_accounts').update(update).eq('id', id);
+      error ? showToast('Error: ' + error.message, true) : showToast('Saved — refresh team views for updated overhead');
+    }
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') input.blur(); });
+  }
+
+  init();
 </script>
 </body>
 </html>
